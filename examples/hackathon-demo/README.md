@@ -1,6 +1,6 @@
 # Steps for Hackathon Demo
 
-1. [X] start ursula netork
+1. [x] start ursula netork
 1. [] generate a encryption key for doctor
 1. [] generate a key for alice
 1. [] generate a policy file for that doctor

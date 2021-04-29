@@ -20,6 +20,7 @@ from contextlib import suppress
 from functools import partial
 from pathlib import Path
 
+from setproctitle import setproctitle
 from twisted.internet import reactor
 
 from nucypher.characters.lawful import Ursula
@@ -32,7 +33,7 @@ DEMO_NODE_STARTING_PORT = 11500
 ursula_maker = partial(Ursula, rest_host=LOOPBACK_ADDRESS,
                        federated_only=True,
                        domain=TEMPORARY_DOMAIN)
-
+setproctitle("ursula")
 
 def spin_up_federated_ursulas(quantity: int = FLEET_POPULATION):
     # Ports
