@@ -7,7 +7,6 @@ import subprocess
 import time
 
 import maya
-import msgpack
 
 from nucypher.characters.lawful import Bob, Ursula, Enrico
 from nucypher.config.characters import AliceConfiguration
@@ -16,10 +15,12 @@ from nucypher.utilities.logging import GlobalLoggerSettings
 
 GlobalLoggerSettings.start_console_logging()
 TEMP_ALICE_DIR = os.path.join('/', 'tmp', 'hackathon')
+FAKE_S3_FOLDER = os.path.join(TEMP_ALICE_DIR, 's3')
+ENCRYPTED_HEARTBEAT = os.path.join(FAKE_S3_FOLDER, "alice_heart_beat.enc")
+HEARTBEAT = "alice_heart_beat.json"
 SEEDNODE_URI = "localhost:11500"
 POLICY_FILENAME = "policy-metadata.json"
 passphrase = "TEST_ALICIA_INSECURE_DEVELOPMENT_PASSWORD"
-HEART_DATA_FILENAME = 'heart_data.msgpack'
 
 shutil.rmtree(TEMP_ALICE_DIR, ignore_errors=True)
 
@@ -55,14 +56,12 @@ alicia.start_learning_loop(now=True)
 subprocess.run(["tree", "/tmp/hackathon/known_nodes"])
 input("Alicia Knows about the Ursula Network")
 
-label = "heart-data-❤️-"+os.urandom(4).hex()
+label = str.encode("heart-data-label")
 print("Label generated for IOT data: ", label)
-label = label.encode()
-print("Label encoded: ", label)
 
 policy_pubkey = alicia.get_policy_encrypting_key_from_label(label)
-data_source = Enrico(policy_encrypting_key=policy_pubkey)
-data_source_public_key = bytes(data_source.stamp)
+encrico = Enrico(policy_encrypting_key=policy_pubkey)
+enrico_public_key = bytes(encrico.stamp)
 input("Enrico set up to accept Data for Encryption, Time to generate heart-rate data.")
 
 heart_rate = 80
@@ -83,20 +82,26 @@ data = {
     'heartbeats': beats,
 }
 
-with open('alice_heart_data.json', 'w') as outfile:
+with open(HEARTBEAT, 'w') as outfile:
     json.dump(data, outfile)
 
-subprocess.run(["jq", ".", "alice_heart_data.json"])
+subprocess.run(["jq", ".", HEARTBEAT])
+input("Continue")
 
-with open('alice_heart_data.json', 'rb') as file:
+with open(HEARTBEAT, 'rb') as file:
     plain_bytes = file.read()
-    encrypted_msg, _signature = data_source.encrypt_message(plain_bytes)
+    encrypted_msg, _signature = encrico.encrypt_message(plain_bytes)
 
-with open('alice_heart_data.enc', 'wb') as enc_out:
+if not os.path.exists(FAKE_S3_FOLDER):
+    os.makedirs(FAKE_S3_FOLDER)
+
+with open(ENCRYPTED_HEARTBEAT, 'wb') as enc_out:
     enc_out.write(encrypted_msg.to_bytes())
 
-subprocess.run(["ccat", "alice_heart_data.enc"])
+subprocess.run(["tree", "/tmp/hackathon"])
+input("Continue")
 
+subprocess.run(["ccat", ENCRYPTED_HEARTBEAT])
 input("Continue")
 
 from doctor_keys import get_doctor_pubkeys
