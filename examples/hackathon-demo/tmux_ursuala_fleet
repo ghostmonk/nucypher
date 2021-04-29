@@ -4,5 +4,5 @@ envname=ursula-fleet
 
 tmux new-session -d -s $envname
 
-tmux send-keys -t $envname "python run_ursula_fleet.py"C-m
+tmux send-keys -t $envname "python run_ursula_fleet.py" C-m
 
