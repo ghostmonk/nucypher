@@ -1,20 +1,3 @@
-"""
- This file is part of nucypher.
-
- nucypher is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- nucypher is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License
- along with nucypher.  If not, see <https://www.gnu.org/licenses/>.
-"""
-
 import json
 import traceback
 from timeit import default_timer as timer
@@ -33,31 +16,65 @@ from nucypher.crypto.kits import UmbralMessageKit
 from nucypher.crypto.powers import DecryptingPower, SigningPower
 from nucypher.network.middleware import RestMiddleware
 from nucypher.utilities.logging import GlobalLoggerSettings
+from umbral.keys import UmbralPrivateKey, UmbralPublicKey
+
 
 GlobalLoggerSettings.start_console_logging()
 
-######################
-# Boring setup stuff #
-######################
+SEEDNODE_URI = "localhost:11500"
 
-try:
-    SEEDNODE_URI = sys.argv[1]
-except IndexError:
-    SEEDNODE_URI = "localhost:11500"
-
-
-# TODO: path joins?
 TEMP_DOCTOR_DIR = "{}/doctor-files".format(os.path.dirname(os.path.abspath(__file__)))
 
 # Remove previous demo files and create new ones
 shutil.rmtree(TEMP_DOCTOR_DIR, ignore_errors=True)
 
-ursula = Ursula.from_seed_and_stake_info(seed_uri=SEEDNODE_URI,
-                                         federated_only=True,
-                                         minimum_stake=0)
+ursula = Ursula.from_seed_and_stake_info(seed_uri=SEEDNODE_URI, federated_only=True, minimum_stake=0)
 
 # To create a Bob, we need the doctor's private keys previously generated.
-from doctor_keys import get_doctor_privkeys
+DOCTOR_PUBLIC_JSON = 'doctor.public.json'
+DOCTOR_PRIVATE_JSON = 'doctor.private.json'
+
+
+def generate_doctor_keys():
+    enc_privkey = UmbralPrivateKey.gen_key()
+    sig_privkey = UmbralPrivateKey.gen_key()
+
+    doctor_privkeys = {
+        'enc': enc_privkey.to_bytes().hex(),
+        'sig': sig_privkey.to_bytes().hex(),
+    }
+
+    with open(DOCTOR_PRIVATE_JSON, 'w') as f:
+        json.dump(doctor_privkeys, f)
+
+    enc_pubkey = enc_privkey.get_pubkey()
+    sig_pubkey = sig_privkey.get_pubkey()
+    doctor_pubkeys = {
+        'enc': enc_pubkey.to_bytes().hex(),
+        'sig': sig_pubkey.to_bytes().hex()
+    }
+    with open(DOCTOR_PUBLIC_JSON, 'w') as f:
+        json.dump(doctor_pubkeys, f)
+
+
+def _get_keys(file, key_class):
+    if not os.path.isfile(file):
+        generate_doctor_keys()
+
+    with open(file) as f:
+        stored_keys = json.load(f)
+    keys = dict()
+    for key_type, key_str in stored_keys.items():
+        keys[key_type] = key_class.from_bytes(bytes.fromhex(key_str))
+    return keys
+
+
+def get_doctor_pubkeys():
+    return _get_keys(DOCTOR_PUBLIC_JSON, UmbralPublicKey)
+
+
+def get_doctor_privkeys():
+    return _get_keys(DOCTOR_PRIVATE_JSON, UmbralPrivateKey)
 
 doctor_keys = get_doctor_privkeys()
 
@@ -93,11 +110,6 @@ label = policy_data["label"].encode()
 print("The Doctor joins policy for label '{}'".format(label.decode("utf-8")))
 doctor.join_policy(label, alices_sig_pubkey)
 
-# Now that the Doctor joined the policy in the NuCypher network,
-# he can retrieve encrypted data which he can decrypt with his private key.
-# But first we need some encrypted data!
-# Let's read the file produced by the heart monitor and unpack the MessageKits,
-# which are the individual ciphertexts.
 data = msgpack.load(open("heart_data.msgpack", "rb"), raw=False)
 message_kits = (UmbralMessageKit.from_bytes(k) for k in data['kits'])
 
