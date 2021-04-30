@@ -1,8 +1,8 @@
 clean:
-	rm *.msgpack *.json
+	rm -f *.json
 	rm -rf /tmp/hackathon
 
-lsur:
+show-fleet-listeners:
 	lsof -n | grep 115 | grep LISTEN
 
 run-fleet:
@@ -14,12 +14,5 @@ show-fleet:
 kill-fleet:
 	tmux kill-session -t ursula-fleet
 
-show-files:
-	tree /tmp/hackathon
-	ls -l *json *msgpack
-
-run:
+run: clean
 	python alicia.py
-
-show-alice-config:
-	ccat /tmp/hackathon/alice.json

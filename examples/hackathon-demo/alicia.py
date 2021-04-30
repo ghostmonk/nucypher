@@ -79,9 +79,7 @@ for _ in range(50):
     })
 
 
-data = {
-    'heartbeats': beats,
-}
+data = {'heartbeats': beats}
 
 with open(HEARTBEAT, 'w') as outfile:
     json.dump(data, outfile)
@@ -112,9 +110,15 @@ input("Read Policy File")
 subprocess.run(["ccat", DATA_POLICY_KEY])
 subprocess.run(["echo", "\r"])
 
-from doctor_keys import get_doctor_pubkeys
+from doctor_keys import get_doctor_pubkeys, DOCTOR_PUBLIC_JSON, DOCTOR_PRIVATE_JSON
+
 doctor_pubkeys = get_doctor_pubkeys()
-print("Doctor Public keys generated")
+
+input("Doctor Public Key")
+subprocess.run(["jq", ".", DOCTOR_PUBLIC_JSON])
+input("Doctor Private Key")
+subprocess.run(["jq", ".", DOCTOR_PRIVATE_JSON])
+
 
 doctor_strange = Bob.from_public_keys(
     verifying_key=doctor_pubkeys['sig'],
@@ -131,14 +135,9 @@ m, n = 2, 3
 
 # With this information, Alicia creates a policy granting access to Bob.
 # The policy is sent to the NuCypher network.
-print("Creating access policy for the Doctor...")
-policy = alicia.grant(bob=doctor_strange,
-                      label=label,
-                      m=m,
-                      n=n,
-                      expiration=policy_end_datetime)
+input("Alice creates an access policy for the Doc")
+policy = alicia.grant(bob=doctor_strange, label=label, m=m, n=n, expiration=policy_end_datetime)
 policy.treasure_map_publisher.block_until_complete()
-print("Done!")
 
 # For the demo, we need a way to share with Bob some additional info
 # about the policy, so we store it in a JSON file
@@ -148,6 +147,8 @@ policy_info = {
     "label": label.decode("utf-8"),
 }
 
-filename = POLICY_FILENAME
-with open(filename, 'w') as f:
+with open(POLICY_FILENAME, 'w') as f:
     json.dump(policy_info, f)
+
+input("Read Policy file")
+subprocess.run(["jq", ".", POLICY_FILENAME])
