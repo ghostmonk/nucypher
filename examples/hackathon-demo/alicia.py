@@ -38,19 +38,19 @@ alice_config = AliceConfiguration(
 alice_config.initialize(password=passphrase)
 
 print("Alice has been initialized")
-subprocess.run(["tree", "/tmp/hackathon"])
-input("Continue")
+subprocess.run(["tree", TEMP_ALICE_DIR])
+input("Continue\n")
 
 alice_config.keyring.unlock(password=passphrase)
 print("Alice Key Unlocked - ready to encrypt")
-input("Continue")
+input("Continue\n")
 
 alicia = alice_config.produce()
 alice_config_file = alice_config.to_configuration_file()
 print("Alice Config saved")
 subprocess.run(["ccat", "/tmp/hackathon/alice.json"])
 subprocess.run(["echo", "\r"])
-subprocess.run(["tree", "/tmp/hackathon"])
+subprocess.run(["tree", TEMP_ALICE_DIR])
 input("Alice has Ursula Seed TLS")
 
 alicia.start_learning_loop(now=True)
@@ -100,7 +100,7 @@ with open(ENCRYPTED_HEARTBEAT, 'wb') as enc_out:
 with open(DATA_POLICY_KEY, 'wb') as policy_out:
     policy_out.write(enrico_public_key)
 
-subprocess.run(["tree", "/tmp/hackathon"])
+subprocess.run(["tree", TEMP_ALICE_DIR])
 
 input("Read Encrypted Message")
 subprocess.run(["ccat", ENCRYPTED_HEARTBEAT])
