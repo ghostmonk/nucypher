@@ -158,3 +158,10 @@ with open(POLICY_FILENAME, 'w') as f:
 
 print_roman("Read Policy file")
 subprocess.run(["jq", ".", POLICY_FILENAME])
+
+input("Doctor has now access to data")
+answer = input("Revoke policy? (y/N): ")
+
+if answer == "y"  or answer == "Y" or answer == "yes" or answer == "Yes":
+    result = alicia.revoke(policy=policy)
+    print("Policy revoked. Doctor can no longer decrypt data")
