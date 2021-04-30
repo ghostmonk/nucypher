@@ -81,8 +81,6 @@ enc_power = DecryptingPower(keypair=bob_enc_keypair)
 sig_power = SigningPower(keypair=bob_sig_keypair)
 power_ups = [enc_power, sig_power]
 
-print("Creating the Doctor ...")
-
 doctor = Bob(
     domain=TEMPORARY_DOMAIN,
     federated_only=True,
@@ -101,7 +99,9 @@ with open("policy-metadata.json", 'r') as f:
     policy_data = json.load(f)
 
 policy_pubkey = UmbralPublicKey.from_bytes(bytes.fromhex(policy_data["policy_pubkey"]))
+print(policy_pubkey)
 alices_sig_pubkey = UmbralPublicKey.from_bytes(bytes.fromhex(policy_data["alice_sig_pubkey"]))
+print(alices_sig_pubkey)
 label = policy_data["label"].encode()
 
 print("The Doctor joins policy for label '{}'".format(label.decode("utf-8")))
@@ -124,4 +124,5 @@ retrieved = doctor.retrieve(
     enrico=data_source,
     alice_verifying_key=alices_sig_pubkey)
 
-print(retrieved[0])
+result = json.loads(retrieved[0].decode())
+print(json.dumps(result, indent=2))
