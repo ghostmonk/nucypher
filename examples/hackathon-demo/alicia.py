@@ -17,6 +17,7 @@ GlobalLoggerSettings.start_console_logging()
 TEMP_ALICE_DIR = os.path.join('/', 'tmp', 'hackathon')
 FAKE_S3_FOLDER = os.path.join(TEMP_ALICE_DIR, 's3')
 ENCRYPTED_HEARTBEAT = os.path.join(FAKE_S3_FOLDER, "alice_heart_beat.enc")
+DATA_POLICY_KEY = os.path.join(FAKE_S3_FOLDER, "heartbeat_policy.pub")
 HEARTBEAT = "alice_heart_beat.json"
 SEEDNODE_URI = "localhost:11500"
 POLICY_FILENAME = "policy-metadata.json"
@@ -86,7 +87,7 @@ with open(HEARTBEAT, 'w') as outfile:
     json.dump(data, outfile)
 
 subprocess.run(["jq", ".", HEARTBEAT])
-input("Continue")
+input("Time to encrypt message")
 
 with open(HEARTBEAT, 'rb') as file:
     plain_bytes = file.read()
@@ -98,11 +99,18 @@ if not os.path.exists(FAKE_S3_FOLDER):
 with open(ENCRYPTED_HEARTBEAT, 'wb') as enc_out:
     enc_out.write(encrypted_msg.to_bytes())
 
-subprocess.run(["tree", "/tmp/hackathon"])
-input("Continue")
+with open(DATA_POLICY_KEY, 'wb') as policy_out:
+    policy_out.write(enrico_public_key)
 
+subprocess.run(["tree", "/tmp/hackathon"])
+
+input("Read Encrypted Message")
 subprocess.run(["ccat", ENCRYPTED_HEARTBEAT])
-input("Continue")
+subprocess.run(["echo", "\r"])
+
+input("Read Policy File")
+subprocess.run(["ccat", DATA_POLICY_KEY])
+subprocess.run(["echo", "\r"])
 
 from doctor_keys import get_doctor_pubkeys
 doctor_pubkeys = get_doctor_pubkeys()
