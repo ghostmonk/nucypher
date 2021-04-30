@@ -37,33 +37,42 @@ alice_config = AliceConfiguration(
 )
 alice_config.initialize(password=passphrase)
 
-print("Alice has been initialized")
+
+def print_roman(text):
+    subprocess.run(["figlet", "-f", "roman", "-w", "120", text])
+    input("Continue\n")
+
+
+print_roman("Alice initialized")
 subprocess.run(["tree", TEMP_ALICE_DIR])
 input("Continue\n")
 
 alice_config.keyring.unlock(password=passphrase)
-print("Alice Key Unlocked - ready to encrypt")
-input("Continue\n")
+
+print_roman("Key Unlocked: Ready to encrypt")
 
 alicia = alice_config.produce()
 alice_config_file = alice_config.to_configuration_file()
-print("Alice Config saved")
+print_roman("Config saved")
 subprocess.run(["ccat", "/tmp/hackathon/alice.json"])
-subprocess.run(["echo", "\r"])
+input("Continue\n")
+
+print_roman("Ursula Seed Known")
 subprocess.run(["tree", TEMP_ALICE_DIR])
-input("Alice has Ursula Seed TLS")
+input("Continue\n")
 
 alicia.start_learning_loop(now=True)
+print_roman("Ursula Network Available")
 subprocess.run(["tree", "/tmp/hackathon/known_nodes"])
-input("Alicia Knows about the Ursula Network")
+input("Continue\n")
 
 label = str.encode("heart-data-label")
-print("Label generated for IOT data: ", label)
+print_roman("Label:" + label.decode())
 
 policy_pubkey = alicia.get_policy_encrypting_key_from_label(label)
 encrico = Enrico(policy_encrypting_key=policy_pubkey)
 enrico_public_key = bytes(encrico.stamp)
-input("Enrico set up to accept Data for Encryption, Time to generate heart-rate data.")
+print_roman("Enrico Ready: Gen heartbeat data.")
 
 heart_rate = 80
 now = time.time()
@@ -78,14 +87,13 @@ for _ in range(50):
         'timestamp': now,
     })
 
-
 data = {'heartbeats': beats}
 
 with open(HEARTBEAT, 'w') as outfile:
     json.dump(data, outfile)
 
 subprocess.run(["jq", ".", HEARTBEAT])
-input("Time to encrypt message")
+print_roman("Encrypt message")
 
 with open(HEARTBEAT, 'rb') as file:
     plain_bytes = file.read()
@@ -102,11 +110,11 @@ with open(DATA_POLICY_KEY, 'wb') as policy_out:
 
 subprocess.run(["tree", TEMP_ALICE_DIR])
 
-input("Read Encrypted Message")
+print_roman("Read Encrypted Message")
 subprocess.run(["ccat", ENCRYPTED_HEARTBEAT])
 subprocess.run(["echo", "\r"])
 
-input("Read Policy File")
+print_roman("Read Policy File")
 subprocess.run(["ccat", DATA_POLICY_KEY])
 subprocess.run(["echo", "\r"])
 
@@ -114,11 +122,10 @@ from doctor_keys import get_doctor_pubkeys, DOCTOR_PUBLIC_JSON, DOCTOR_PRIVATE_J
 
 doctor_pubkeys = get_doctor_pubkeys()
 
-input("Doctor Public Key")
+print_roman("Doctor Public Key")
 subprocess.run(["jq", ".", DOCTOR_PUBLIC_JSON])
-input("Doctor Private Key")
+print_roman("Doctor Private Key")
 subprocess.run(["jq", ".", DOCTOR_PRIVATE_JSON])
-
 
 doctor_strange = Bob.from_public_keys(
     verifying_key=doctor_pubkeys['sig'],
@@ -132,10 +139,9 @@ policy_end_datetime = maya.now() + datetime.timedelta(days=1)
 #               she requires Bob to seek collaboration of at least 3 Ursulas
 m, n = 2, 3
 
-
 # With this information, Alicia creates a policy granting access to Bob.
 # The policy is sent to the NuCypher network.
-input("Alice creates an access policy for the Doc")
+print_roman("Doc Policy Creation")
 policy = alicia.grant(bob=doctor_strange, label=label, m=m, n=n, expiration=policy_end_datetime)
 policy.treasure_map_publisher.block_until_complete()
 
@@ -150,5 +156,5 @@ policy_info = {
 with open(POLICY_FILENAME, 'w') as f:
     json.dump(policy_info, f)
 
-input("Read Policy file")
+print_roman("Read Policy file")
 subprocess.run(["jq", ".", POLICY_FILENAME])
