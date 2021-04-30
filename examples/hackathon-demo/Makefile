@@ -16,3 +16,6 @@ kill-fleet:
 
 run: clean
 	python alicia.py
+
+run-doctor:
+	python doctor.py
